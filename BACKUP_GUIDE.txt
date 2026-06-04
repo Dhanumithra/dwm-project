@@ -1,0 +1,7 @@
+MongoDB Backup
+
+mongodump --out D:\backup
+
+MongoDB Restore
+
+mongorestore D:\backup
