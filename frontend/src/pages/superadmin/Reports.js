@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import "../../styles/theme.css";
 
 const today = new Date().toISOString().split("T")[0];
@@ -30,6 +32,11 @@ const StatusBadge = ({ status }) => {
       {s.label}
     </span>
   );
+};
+
+const formatHours = (value) => {
+  const hours = Number(value);
+  return Number.isFinite(hours) ? hours.toFixed(2) : "0.00";
 };
 
 export default function Reports() {
@@ -143,7 +150,68 @@ export default function Reports() {
     document.body.appendChild(a); a.click(); a.remove();
   };
 
-  const exportPDF  = () => window.print();
+  const exportPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const regularHours = filtered.reduce((sum, row) => sum + (Number(row.regularHours) || 0), 0);
+    const overtimeHours = filtered.reduce((sum, row) => sum + (Number(row.overtimeHours) || 0), 0);
+    const totalHours = filtered.reduce((sum, row) => sum + (Number(row.totalHours) || 0), 0);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("Reports", 40, 40);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    const employeeLines = selectedEmpInfo
+      ? [
+          `Employee: ${selectedEmpInfo.name || "—"}`,
+          `Designation: ${selectedEmpInfo.designation || "—"}`,
+          `Email: ${selectedEmpInfo.email || "—"}`,
+          `Department: ${selectedEmpInfo.dept || "—"}`,
+        ]
+      : [
+          `Department: All Departments`,
+          `Employee: All Employees`,
+        ];
+    employeeLines.forEach((line, index) => doc.text(line, 40, 64 + (index * 14)));
+
+    autoTable(doc, {
+      startY: 130,
+      head: [["DATE", "EMP NO", "EMPLOYEE", "DEPARTMENT", "DESIGNATION", "CATEGORY", "REG HRS", "OT HRS", "TOTAL HRS", "APPROVAL STATUS"]],
+      body: filtered.map((row) => [
+        row.date,
+        row.empNo || row.empId,
+        row.employee,
+        row.dept,
+        row.designation || "—",
+        row.category,
+        formatHours(row.regularHours),
+        formatHours(row.overtimeHours),
+        formatHours(row.totalHours),
+        row.approvalStatus,
+      ]),
+      margin: { left: 40, right: 40 },
+      styles: { fontSize: 7.5, cellPadding: 4, overflow: "linebreak", valign: "middle" },
+      headStyles: { fillColor: [29, 78, 216], textColor: 255 },
+    });
+
+    const summaryStartY = doc.lastAutoTable.finalY + 18;
+    autoTable(doc, {
+      startY: summaryStartY,
+      head: [["Summary", "Value"]],
+      body: [
+        ["Regular Hours", formatHours(regularHours)],
+        ["Overtime Hours", formatHours(overtimeHours)],
+        ["Total Hours", formatHours(totalHours)],
+      ],
+      margin: { left: 40, right: 40 },
+      tableWidth: 260,
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [15, 23, 42], textColor: 255 },
+    });
+
+    doc.save(`dwm_report_${today}.pdf`);
+  };
 
   const exportExcel = () => {
     const headers = ["DATE", "EMP ID", "EMPLOYEE", "DEPARTMENT", "DESIGNATION", "CATEGORY", "REG HOURS", "OT HOURS", "TOTAL HOURS", "APPROVAL STATUS"];

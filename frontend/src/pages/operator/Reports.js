@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import "../../styles/theme.css";
 
 const StatusBadge = ({ status }) => {
@@ -17,6 +19,11 @@ const MachineBadge = ({ machine }) => (
     ⚙️ {machine}
   </span>
 );
+
+const formatHours = (value) => {
+  const hours = Number(value);
+  return Number.isFinite(hours) ? hours.toFixed(2) : "0.00";
+};
 
 export default function Reports() {
   const today = new Date().toISOString().split("T")[0];
@@ -115,7 +122,76 @@ export default function Reports() {
     document.body.appendChild(a); a.click(); a.remove();
   };
 
-  const exportPDF = () => window.print();
+  const exportPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+    const regularHours = filtered.reduce((sum, row) => sum + (Number(row.regularMins) || 0), 0) / 60;
+    const overtimeHours = filtered.reduce((sum, row) => sum + (Number(row.overtimeMins) || 0), 0) / 60;
+    const totalHours = regularHours + overtimeHours;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("My Reports", 40, 40);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    const employeeLines = [
+      `Employee: ${user.username || user.name || "—"}`,
+      `Emp ID: ${user.id || "—"}`,
+      `Designation: ${user.designation || "—"}`,
+      `Email: ${user.email || "—"}`,
+      `Department: ${user.department || "—"}`,
+    ];
+    employeeLines.forEach((line, index) => doc.text(line, 40, 64 + (index * 14)));
+
+    autoTable(doc, {
+      startY: 144,
+      head: [["DATE", "SHIFT", "CATEGORY", "MACHINES OPERATED", "MACHINE HRS", "REG HRS", "OT HRS", "STATUS"]],
+      body: filtered.map((row) => {
+        const machineRows = row.machineRows || [];
+        const machineNames = machineRows.length > 0
+          ? machineRows.map((machine) => machine.machine || machine.name).join(", ")
+          : "—";
+        const machineHours = machineRows.length > 0
+          ? machineRows.map((machine) => {
+              const hours = Number(machine.machineHrs) || 0;
+              const mins = Number(machine.machineMins) || 0;
+              return `${machine.machine || machine.name}: ${hours}h${mins > 0 ? ` ${mins}m` : ""}`;
+            }).join(" | ")
+          : "—";
+
+        return [
+          row.date,
+          `Shift ${row.shift}`,
+          `${row.category} - ${row.subCategory}`,
+          machineNames,
+          machineHours,
+          formatHours((Number(row.regularMins) || 0) / 60),
+          formatHours((Number(row.overtimeMins) || 0) / 60),
+          row.status,
+        ];
+      }),
+      margin: { left: 40, right: 40 },
+      styles: { fontSize: 7.5, cellPadding: 4, overflow: "linebreak", valign: "middle" },
+      headStyles: { fillColor: [29, 78, 216], textColor: 255 },
+    });
+
+    const summaryStartY = doc.lastAutoTable.finalY + 18;
+    autoTable(doc, {
+      startY: summaryStartY,
+      head: [["Summary", "Value"]],
+      body: [
+        ["Regular Hours", formatHours(regularHours)],
+        ["Overtime Hours", formatHours(overtimeHours)],
+        ["Total Hours", formatHours(totalHours)],
+      ],
+      margin: { left: 40, right: 40 },
+      tableWidth: 260,
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [15, 23, 42], textColor: 255 },
+    });
+
+    doc.save(`dwm_operator_report_${today}.pdf`);
+  };
 
   const exportExcel = () => {
     const hdrs = ["DATE","SHIFT","CATEGORY","SUB-CATEGORY","REG HOURS","OT HOURS","STATUS","REMARKS"];
