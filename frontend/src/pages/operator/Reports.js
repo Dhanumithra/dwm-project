@@ -198,7 +198,7 @@ export default function Reports() {
     const csv = "data:text/csv;charset=utf-8," + [
       hdrs.join(","),
       ...filtered.map(r => [
-        r.date, r.shift, r.category, r.subCategory,
+        r.date ? `="${r.date}"` : "", r.shift, r.category, r.subCategory,
         (r.regularMins / 60.0).toFixed(2),
         (r.overtimeMins / 60.0).toFixed(2),
         r.status, `"${(r.remarks || "").replace(/"/g, '""')}"`

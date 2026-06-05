@@ -190,7 +190,7 @@ export default function Reports() {
   const exportExcel = () => {
     const headers = ["DATE", "EMP NO", "EMPLOYEE", "DESIGNATION", "CATEGORY", "REG HOURS", "OT HOURS", "TOTAL HOURS", "STATUS"];
     const rows = filtered.map(r => [
-      r.date, r.empNo || r.empId, r.employee,
+      r.date ? `="${r.date}"` : "", r.empNo || r.empId, r.employee,
       r.designation || "—", r.category,
       r.regularHours, r.overtimeHours, r.totalHours, r.status
     ]);

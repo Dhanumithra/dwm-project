@@ -216,7 +216,7 @@ export default function Reports() {
   const exportExcel = () => {
     const headers = ["DATE", "EMP ID", "EMPLOYEE", "DEPARTMENT", "DESIGNATION", "CATEGORY", "REG HOURS", "OT HOURS", "TOTAL HOURS", "APPROVAL STATUS"];
     const rows = filtered.map(r => [
-      r.date, r.empNo || r.empId, r.employee, r.dept, r.designation || "—",
+      r.date ? `="${r.date}"` : "", r.empNo || r.empId, r.employee, r.dept, r.designation || "—",
       r.category, r.regularHours, r.overtimeHours, r.totalHours, r.approvalStatus
     ]);
     const csv = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
