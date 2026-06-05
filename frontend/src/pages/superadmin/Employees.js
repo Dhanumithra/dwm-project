@@ -32,6 +32,7 @@ export default function Employees({ superUser }) {
   const [editEmp, setEditEmp]       = useState(null);
   const [confirmId, setConfirmId]   = useState(null);
   const [newEmp, setNewEmp]         = useState({ name:"", email:"", role:"USER", dept:"", designation:"", empNo:"" });
+  const [newEmpErrors, setNewEmpErrors] = useState({});
   const [activeTab, setActiveTab]   = useState("employees");
 
   // Category CRUD
@@ -45,6 +46,38 @@ export default function Employees({ superUser }) {
   const [adminResets, setAdminResets]   = useState([]);
 
   const showMsg = (type, message) => { setAlert({type,message}); setTimeout(()=>setAlert(null),3500); };
+
+  const validateNewEmployee = (employee) => {
+    const errors = {};
+    const name = employee.name.trim();
+    const email = employee.email.trim();
+    const empNo = employee.empNo.trim();
+    const designation = employee.designation.trim();
+    const role = employee.role.trim();
+    const dept = employee.dept.trim();
+
+    if (!name) errors.name = "Name is required";
+    if (!email) {
+      errors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = "Email must be a valid email address";
+    }
+    if (!empNo) errors.empNo = "Employee Number is required";
+    if (!designation) errors.designation = "Designation is required";
+    if (!role) errors.role = "Role is required";
+    if (!dept) errors.dept = "Department is required";
+
+    return errors;
+  };
+
+  const clearNewEmpError = (field) => {
+    setNewEmpErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
 
   const loadData = async () => {
     try {
@@ -96,8 +129,9 @@ export default function Employees({ superUser }) {
   const filtered = filterDept==="all"?employees:employees.filter((e)=>e.dept===filterDept);
 
   const addEmployee = () => {
-    if(!newEmp.name.trim()||!newEmp.email.trim()||!newEmp.dept.trim()||!newEmp.empNo.trim()) {
-      showMsg("warning", "Please fill all mandatory fields including Employee Number (empNo).");
+    const errors = validateNewEmployee(newEmp);
+    setNewEmpErrors(errors);
+    if (Object.keys(errors).length > 0) {
       return;
     }
     (async () => {
@@ -105,6 +139,7 @@ export default function Employees({ superUser }) {
         const created = await employeesApi.create(newEmp);
         setEmployees((prev)=>[...prev, created]);
         setNewEmp({name:"",email:"",role:"USER",dept:"",designation:"",empNo:""});
+        setNewEmpErrors({});
         setShowAdd(false); 
         showMsg("success","Employee added successfully.");
       } catch (err) {
@@ -292,28 +327,92 @@ export default function Employees({ superUser }) {
               <div className="card mb-4" style={{ padding:"20px" }}>
                 <h6 style={{ marginBottom:16, fontWeight:700 }}>New Employee</h6>
                 <div className="row g-2">
-                  <div className="col-md-2"><label>Name</label><input className="form-control" placeholder="Full name" value={newEmp.name} onChange={(e)=>setNewEmp({...newEmp,name:e.target.value})} /></div>
-                  <div className="col-md-2"><label>Email</label><input className="form-control" placeholder="email@dwm.com" value={newEmp.email} onChange={(e)=>setNewEmp({...newEmp,email:e.target.value})} /></div>
-                  <div className="col-md-2"><label>Employee No (empNo)</label><input className="form-control" placeholder="e.g. 9002" value={newEmp.empNo} onChange={(e)=>setNewEmp({...newEmp,empNo:e.target.value})} /></div>
-                  <div className="col-md-2"><label>Designation</label><input className="form-control" placeholder="e.g. Engineer" value={newEmp.designation} onChange={(e)=>setNewEmp({...newEmp,designation:e.target.value})} /></div>
+                  <div className="col-md-2">
+                    <label>Name</label>
+                    <input
+                      className={`form-control${newEmpErrors.name ? " is-invalid" : ""}`}
+                      placeholder="Full name"
+                      value={newEmp.name}
+                      onChange={(e)=>{
+                        setNewEmp({...newEmp,name:e.target.value});
+                        clearNewEmpError("name");
+                      }}
+                    />
+                    {newEmpErrors.name && <div className="invalid-feedback d-block">{newEmpErrors.name}</div>}
+                  </div>
+                  <div className="col-md-2">
+                    <label>Email</label>
+                    <input
+                      className={`form-control${newEmpErrors.email ? " is-invalid" : ""}`}
+                      placeholder="email@dwm.com"
+                      value={newEmp.email}
+                      onChange={(e)=>{
+                        setNewEmp({...newEmp,email:e.target.value});
+                        clearNewEmpError("email");
+                      }}
+                    />
+                    {newEmpErrors.email && <div className="invalid-feedback d-block">{newEmpErrors.email}</div>}
+                  </div>
+                  <div className="col-md-2">
+                    <label>Employee No (empNo)</label>
+                    <input
+                      className={`form-control${newEmpErrors.empNo ? " is-invalid" : ""}`}
+                      placeholder="e.g. 9002"
+                      value={newEmp.empNo}
+                      onChange={(e)=>{
+                        setNewEmp({...newEmp,empNo:e.target.value});
+                        clearNewEmpError("empNo");
+                      }}
+                    />
+                    {newEmpErrors.empNo && <div className="invalid-feedback d-block">{newEmpErrors.empNo}</div>}
+                  </div>
+                  <div className="col-md-2">
+                    <label>Designation</label>
+                    <input
+                      className={`form-control${newEmpErrors.designation ? " is-invalid" : ""}`}
+                      placeholder="e.g. Engineer"
+                      value={newEmp.designation}
+                      onChange={(e)=>{
+                        setNewEmp({...newEmp,designation:e.target.value});
+                        clearNewEmpError("designation");
+                      }}
+                    />
+                    {newEmpErrors.designation && <div className="invalid-feedback d-block">{newEmpErrors.designation}</div>}
+                  </div>
                   <div className="col-md-1">
                     <label>Role</label>
-                    <select className="form-select" value={newEmp.role} onChange={(e)=>setNewEmp({...newEmp,role:e.target.value})}>
+                    <select
+                      className={`form-select${newEmpErrors.role ? " is-invalid" : ""}`}
+                      value={newEmp.role}
+                      onChange={(e)=>{
+                        setNewEmp({...newEmp,role:e.target.value});
+                        clearNewEmpError("role");
+                      }}
+                    >
                       <option value="USER">USER</option><option value="ADMIN">ADMIN</option><option value="OPERATOR">OPERATOR</option>
                     </select>
+                    {newEmpErrors.role && <div className="invalid-feedback d-block">{newEmpErrors.role}</div>}
                   </div>
                   <div className="col-md-2">
                     <label>Department</label>
-                    <select className="form-select" value={newEmp.dept} onChange={(e)=>setNewEmp({...newEmp,dept:e.target.value})}>
+                    <select
+                      className={`form-select${newEmpErrors.dept ? " is-invalid" : ""}`}
+                      value={newEmp.dept}
+                      onChange={(e)=>{
+                        setNewEmp({...newEmp,dept:e.target.value});
+                        clearNewEmpError("dept");
+                      }}
+                    >
                       <option value="">Select dept</option>
                       {deptsList.map((d)=><option key={d.id} value={d.name}>{d.name}</option>)}
                     </select>
+                    {newEmpErrors.dept && <div className="invalid-feedback d-block">{newEmpErrors.dept}</div>}
                   </div>
 
                 </div>
                 <div className="d-flex gap-2 mt-3">
                   <button className="btn btn-success btn-sm" onClick={addEmployee}>Add Employee</button>
-                  <button className="btn btn-secondary btn-sm" onClick={()=>setShowAdd(false)}>Cancel</button>
+                  <button className="btn btn-secondary btn-sm" onClick={()=>{ setShowAdd(false); setNewEmpErrors({}); }}>Cancel</button>
                 </div>
               </div>
             )}
