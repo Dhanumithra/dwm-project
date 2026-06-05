@@ -21,6 +21,11 @@ const StatusBadge = ({status}) => {
   const s=m[status]||m.Pending;
   return <span style={{ background:s.bg, color:s.c, fontSize:12, fontWeight:700, padding:"4px 12px", borderRadius:20, display:"inline-block" }}>{status}</span>;
 };
+const RequiredLabel = ({ children }) => (
+  <label>
+    {children} <span style={{ color: "#dc2626" }}>*</span>
+  </label>
+);
 
 export default function Employees({ superUser }) {
   const notif = useNotifications();
@@ -328,7 +333,7 @@ export default function Employees({ superUser }) {
                 <h6 style={{ marginBottom:16, fontWeight:700 }}>New Employee</h6>
                 <div className="row g-2">
                   <div className="col-md-2">
-                    <label>Name</label>
+                    <RequiredLabel>Name</RequiredLabel>
                     <input
                       className={`form-control${newEmpErrors.name ? " is-invalid" : ""}`}
                       placeholder="Full name"
@@ -341,7 +346,7 @@ export default function Employees({ superUser }) {
                     {newEmpErrors.name && <div className="invalid-feedback d-block">{newEmpErrors.name}</div>}
                   </div>
                   <div className="col-md-2">
-                    <label>Email</label>
+                    <RequiredLabel>Email</RequiredLabel>
                     <input
                       className={`form-control${newEmpErrors.email ? " is-invalid" : ""}`}
                       placeholder="email@dwm.com"
@@ -354,7 +359,7 @@ export default function Employees({ superUser }) {
                     {newEmpErrors.email && <div className="invalid-feedback d-block">{newEmpErrors.email}</div>}
                   </div>
                   <div className="col-md-2">
-                    <label>Employee No (empNo)</label>
+                    <RequiredLabel>Employee No</RequiredLabel>
                     <input
                       className={`form-control${newEmpErrors.empNo ? " is-invalid" : ""}`}
                       placeholder="e.g. 9002"
@@ -367,7 +372,7 @@ export default function Employees({ superUser }) {
                     {newEmpErrors.empNo && <div className="invalid-feedback d-block">{newEmpErrors.empNo}</div>}
                   </div>
                   <div className="col-md-2">
-                    <label>Designation</label>
+                    <RequiredLabel>Designation</RequiredLabel>
                     <input
                       className={`form-control${newEmpErrors.designation ? " is-invalid" : ""}`}
                       placeholder="e.g. Engineer"
@@ -380,7 +385,7 @@ export default function Employees({ superUser }) {
                     {newEmpErrors.designation && <div className="invalid-feedback d-block">{newEmpErrors.designation}</div>}
                   </div>
                   <div className="col-md-1">
-                    <label>Role</label>
+                    <RequiredLabel>Role</RequiredLabel>
                     <select
                       className={`form-select${newEmpErrors.role ? " is-invalid" : ""}`}
                       value={newEmp.role}
@@ -394,7 +399,7 @@ export default function Employees({ superUser }) {
                     {newEmpErrors.role && <div className="invalid-feedback d-block">{newEmpErrors.role}</div>}
                   </div>
                   <div className="col-md-2">
-                    <label>Department</label>
+                    <RequiredLabel>Department</RequiredLabel>
                     <select
                       className={`form-select${newEmpErrors.dept ? " is-invalid" : ""}`}
                       value={newEmp.dept}
