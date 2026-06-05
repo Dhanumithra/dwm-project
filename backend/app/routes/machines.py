@@ -13,7 +13,11 @@ def get_machines(
     active: Optional[bool] = Query(None),
     current_user: dict = Depends(get_current_user)
 ):
-    """Returns list of machines, with optional filtering by department."""
+    """Returns list of machines, with optional filtering by department.
+    ADMIN role is automatically scoped to their own department.
+    """
+    if current_user.get("role") == "ADMIN":
+        dept = current_user.get("dept")
     return machine_repo.get_all(dept=dept, active=active)
 
 @router.post("", response_model=MachineOut, status_code=status.HTTP_201_CREATED)

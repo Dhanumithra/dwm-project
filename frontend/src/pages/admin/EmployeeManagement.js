@@ -30,6 +30,7 @@ const StatusPill = ({active}) => (
 
 export default function EmployeeManagement({ adminUser }) {
   const notif = useNotifications();
+  const adminDept = adminUser?.department || adminUser?.dept || "";
   const [employees, setEmployees] = useState([]);
   const [machines, setMachines]           = useState([]);
   const [lateReqs, setLateReqs]           = useState([]);
@@ -39,7 +40,7 @@ export default function EmployeeManagement({ adminUser }) {
   const [showAddM, setShowAddM]           = useState(false);
   const [editM, setEditM]                 = useState(null);
   const [confirmM, setConfirmM]           = useState(null);
-  const [newM, setNewM]                   = useState({name:"",dept:""});
+  const [newM, setNewM]                   = useState({name:"",dept:adminDept});
 
   // Sub Category state
   const [showAddSC, setShowAddSC]         = useState(false);
@@ -84,7 +85,7 @@ export default function EmployeeManagement({ adminUser }) {
       try{
         const created = await machinesApi.create({ name:newM.name, dept:newM.dept });
         setMachines((p)=>[...p, created]);
-        setNewM({name:"",dept:""}); setShowAddM(false); msg("success","Machine added.");
+        setNewM({name:"",dept:adminDept}); setShowAddM(false); msg("success","Machine added.");
       }catch(err){ msg("warning","Failed to add machine."); }
     })();
   };
@@ -142,17 +143,18 @@ export default function EmployeeManagement({ adminUser }) {
     })();
   };
 
-  // Load persisted machines and subcategories
+  // Load persisted machines and subcategories — scoped to admin's department
   useEffect(()=>{
     let mounted = true;
     (async ()=>{
       try{
-        const ms = await machinesApi.list(); if(mounted && Array.isArray(ms)) setMachines(ms);
+        const adminDept = adminUser?.department || adminUser?.dept || "";
+        const ms = await machinesApi.listByDept(adminDept); if(mounted && Array.isArray(ms)) setMachines(ms);
         const scs = await subcatsApi.list(); if(mounted && Array.isArray(scs)) setSubCategories(scs);
       }catch(err){ console.warn('Failed to load mocks',err); }
     })();
     return ()=> mounted=false;
-  },[]);
+  },[adminUser]);
 
   // Late entry approval
   const approveReq = (id) => {
@@ -338,7 +340,7 @@ export default function EmployeeManagement({ adminUser }) {
               <div className="card p-3 mb-3">
                 <div className="row g-2">
                   <div className="col-md-5"><label>Machine Name</label><input className="form-control" placeholder="e.g. CNC Lathe" value={newM.name} onChange={(e)=>setNewM({...newM,name:e.target.value})} /></div>
-                  <div className="col-md-5"><label>Department</label><input className="form-control" placeholder="e.g. Engineering" value={newM.dept} onChange={(e)=>setNewM({...newM,dept:e.target.value})} /></div>
+                  <div className="col-md-5"><label>Department</label><input className="form-control" value={adminDept} readOnly style={{background:"#f1f5f9",color:"#64748b",cursor:"not-allowed"}} title="Machines are created under your department" /></div>
                 </div>
                 <div className="d-flex gap-2 mt-3">
                   <button className="btn btn-success btn-sm" onClick={addMachine}>Save</button>

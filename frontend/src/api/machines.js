@@ -16,6 +16,15 @@ async function list() {
   return await res.json();
 }
 
+async function listByDept(dept) {
+  const qs = dept ? `?dept=${encodeURIComponent(dept)}` : "";
+  const res = await fetch(`${config.API_URL}/machines${qs}`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) throw new Error("Failed to fetch machines");
+  return await res.json();
+}
+
 async function create(payload) {
   const res = await fetch(`${config.API_URL}/machines`, {
     method: "POST",
@@ -54,4 +63,4 @@ async function remove(id) {
   return true;
 }
 
-export default { list, create, update, toggle, remove };
+export default { list, listByDept, create, update, toggle, remove };

@@ -69,6 +69,10 @@ def get_time_entries(
         empId = current_user["id"]
         empNo = current_user["empNo"]
 
+    # ADMIN is automatically scoped to their own department
+    if current_user["role"] == "ADMIN" and not dept:
+        dept = current_user.get("dept")
+
     return time_repo.get_all(
         emp_id=empId,
         emp_no=empNo,
