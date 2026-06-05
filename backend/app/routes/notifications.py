@@ -102,7 +102,13 @@ def delete_notification(id: int, current_user: dict = Depends(get_current_user))
         )
 
     success = notif_repo.delete_by_id(id, current_user["email"])
-    return {"message": "Notification deleted", "success": success}
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete notification"
+        )
+
+    return {"message": "Notification deleted", "success": True}
 
 @router.delete("")
 def delete_all_notifications(current_user: dict = Depends(get_current_user)):

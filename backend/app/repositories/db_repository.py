@@ -367,6 +367,10 @@ class NotificationsRepository(BaseRepository):
     def __init__(self):
         super().__init__(COL_NOTIFICATIONS)
 
+    def get_by_id(self, notif_id: int) -> Optional[dict]:
+        doc = self.collection.find_one({"id": notif_id})
+        return self._clean(doc)
+
     def get_all(self, email: Optional[str] = None) -> List[dict]:
         query = {"toEmail": email} if email else {}
         docs = self.collection.find(query).sort("timestamp", DESCENDING)

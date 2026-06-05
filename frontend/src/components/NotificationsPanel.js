@@ -6,6 +6,7 @@ export default function NotificationsPanel({ user, onClose }) {
   const msgs = getForUser(user?.email || "");
   const unread = msgs.filter((m) => !m.read).length;
   const hasMarkedReadRef = React.useRef(false);
+  const [errorMessage, setErrorMessage] = React.useState("");
 
   React.useEffect(() => {
     if (hasMarkedReadRef.current || unread === 0) return;
@@ -16,13 +17,23 @@ export default function NotificationsPanel({ user, onClose }) {
   const handleDelete = async (msgId) => {
     const confirmed = window.confirm("Delete this notification?");
     if (!confirmed) return;
-    await deleteNotification(msgId);
+    try {
+      setErrorMessage("");
+      await deleteNotification(msgId);
+    } catch (err) {
+      setErrorMessage(err?.message || "Failed to delete notification");
+    }
   };
 
   const handleClearAll = async () => {
     const confirmed = window.confirm("Delete all notifications?");
     if (!confirmed) return;
-    await clearAllNotifications();
+    try {
+      setErrorMessage("");
+      await clearAllNotifications();
+    } catch (err) {
+      setErrorMessage(err?.message || "Failed to clear notifications");
+    }
   };
 
   const typeStyle = (type) => {
@@ -96,6 +107,20 @@ export default function NotificationsPanel({ user, onClose }) {
 
       {/* Messages list */}
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px" }}>
+        {errorMessage && (
+          <div style={{
+            marginBottom: 12,
+            padding: "10px 12px",
+            borderRadius: 8,
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#b91c1c",
+            fontSize: 12.5,
+            fontWeight: 600,
+          }}>
+            {errorMessage}
+          </div>
+        )}
         {msgs.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 20px", color: "#94a3b8" }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>

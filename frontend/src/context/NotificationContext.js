@@ -88,14 +88,28 @@ export function NotificationProvider({ children }) {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
-      if (res.ok) {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-        return true;
+      if (!res.ok) {
+        let message = "Failed to delete notification";
+        try {
+          const errData = await res.json();
+          message = errData.detail || message;
+        } catch (parseErr) {
+          // Ignore JSON parsing issues and use the fallback message.
+        }
+        throw new Error(message);
       }
+
+      const data = await res.json();
+      if (!data?.success) {
+        throw new Error(data?.message || "Failed to delete notification");
+      }
+
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      return true;
     } catch (err) {
       console.warn("Failed to delete notification", err);
+      throw err;
     }
-    return false;
   };
 
   const clearAllNotifications = async () => {
@@ -106,14 +120,28 @@ export function NotificationProvider({ children }) {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
-      if (res.ok) {
-        setNotifications([]);
-        return true;
+      if (!res.ok) {
+        let message = "Failed to clear notifications";
+        try {
+          const errData = await res.json();
+          message = errData.detail || message;
+        } catch (parseErr) {
+          // Ignore JSON parsing issues and use the fallback message.
+        }
+        throw new Error(message);
       }
+
+      const data = await res.json();
+      if (data?.deletedCount === undefined) {
+        throw new Error(data?.message || "Failed to clear notifications");
+      }
+
+      setNotifications([]);
+      return true;
     } catch (err) {
       console.warn("Failed to clear notifications", err);
+      throw err;
     }
-    return false;
   };
 
   const getForUser = () => notifications;

@@ -49,9 +49,10 @@ async function remove(id) {
 }
 
 async function toggle(id) {
+  const token = localStorage.getItem("token");
   const res = await fetch(`${config.API_URL}/employees/${id}/toggle`, {
     method: "PATCH",
-    headers: getHeaders()
+    headers: token ? { "Authorization": `Bearer ${token}` } : {}
   });
   if (!res.ok) throw new Error("Failed to toggle employee status");
   return await res.json();
