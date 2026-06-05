@@ -5,6 +5,13 @@ export default function NotificationsPanel({ user, onClose }) {
   const { getForUser, markRead, markAllRead, approvePasswordReset } = useNotifications();
   const msgs = getForUser(user?.email || "");
   const unread = msgs.filter((m) => !m.read).length;
+  const hasMarkedReadRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (hasMarkedReadRef.current || unread === 0) return;
+    hasMarkedReadRef.current = true;
+    markAllRead(user?.email);
+  }, [markAllRead, unread, user?.email]);
 
   const typeStyle = (type) => {
     const map = {
