@@ -413,6 +413,17 @@ class NotificationsRepository(BaseRepository):
         )
         return self._clean(result)
 
+    def delete_by_id(self, notif_id: int, email: Optional[str] = None) -> bool:
+        query = {"id": notif_id}
+        if email:
+            query["toEmail"] = email
+        return self.collection.delete_one(query).deleted_count > 0
+
+    def delete_all(self, email: Optional[str] = None) -> int:
+        query = {"toEmail": email} if email else {}
+        result = self.collection.delete_many(query)
+        return result.deleted_count
+
 
 class ResetRequestsRepository(BaseRepository):
     def __init__(self):

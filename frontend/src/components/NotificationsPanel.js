@@ -2,7 +2,7 @@ import React from "react";
 import { useNotifications } from "../context/NotificationContext";
 
 export default function NotificationsPanel({ user, onClose }) {
-  const { getForUser, markRead, markAllRead, approvePasswordReset } = useNotifications();
+  const { getForUser, markRead, markAllRead, deleteNotification, clearAllNotifications, approvePasswordReset } = useNotifications();
   const msgs = getForUser(user?.email || "");
   const unread = msgs.filter((m) => !m.read).length;
   const hasMarkedReadRef = React.useRef(false);
@@ -12,6 +12,18 @@ export default function NotificationsPanel({ user, onClose }) {
     hasMarkedReadRef.current = true;
     markAllRead(user?.email);
   }, [markAllRead, unread, user?.email]);
+
+  const handleDelete = async (msgId) => {
+    const confirmed = window.confirm("Delete this notification?");
+    if (!confirmed) return;
+    await deleteNotification(msgId);
+  };
+
+  const handleClearAll = async () => {
+    const confirmed = window.confirm("Delete all notifications?");
+    if (!confirmed) return;
+    await clearAllNotifications();
+  };
 
   const typeStyle = (type) => {
     const map = {
@@ -57,16 +69,16 @@ export default function NotificationsPanel({ user, onClose }) {
           )}
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {unread > 0 && (
+          {msgs.length > 0 && (
             <button
-              onClick={() => markAllRead(user?.email)}
+              onClick={handleClearAll}
               style={{
                 background: "none", border: "1px solid #e2e8f0", borderRadius: 6,
                 padding: "4px 10px", fontSize: 11.5, color: "#475569", cursor: "pointer",
                 fontWeight: 600,
               }}
             >
-              Mark all read
+              Clear All
             </button>
           )}
           <button
@@ -117,7 +129,29 @@ export default function NotificationsPanel({ user, onClose }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
                       <span style={{ fontWeight: 700, fontSize: 13, color: "#0f172a" }}>{msg.subject}</span>
-                      <span style={{ fontSize: 11, color: "#94a3b8", flexShrink: 0, marginLeft: 8 }}>{timeAgo(msg.timestamp)}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 8 }}>
+                        <span style={{ fontSize: 11, color: "#94a3b8" }}>{timeAgo(msg.timestamp)}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(msg.id);
+                          }}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            color: "#dc2626",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                          aria-label="Delete notification"
+                          title="Delete notification"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                     <p style={{ fontSize: 13, color: "#475569", margin: "0 0 4px", lineHeight: 1.5 }}>{msg.body}</p>
                     <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>From: {msg.from}</span>

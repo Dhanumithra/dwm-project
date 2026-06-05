@@ -20,7 +20,17 @@ def get_employees(
     current_user: dict = Depends(get_current_user)
 ):
     """Returns a list of employee profiles, optionally filtered."""
-    return emp_repo.get_all(role=role, dept=dept, active=active)
+    employees = emp_repo.get_all(role=role, dept=dept, active=active)
+
+    # Server-side visibility enforcement
+    if current_user.get("role") == "ADMIN":
+        current_dept = current_user.get("dept")
+        employees = [
+            e for e in employees
+            if e.get("role") != "SUPER_ADMIN" and e.get("dept") == current_dept
+        ]
+
+    return employees
 
 
 @router.get("/{emp_no}", response_model=EmployeeOut)
@@ -35,6 +45,15 @@ def get_employee_by_emp_no(emp_no: str, current_user: dict = Depends(get_current
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Employee with number {emp_no} not found"
         )
+
+    # Visibility enforcement for direct lookups
+    if current_user.get("role") == "ADMIN":
+        if emp.get("role") == "SUPER_ADMIN" or emp.get("dept") != current_user.get("dept"):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Employee with number {emp_no} not found"
+            )
+
     return emp
 
 
@@ -121,6 +140,13 @@ def toggle_employee(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Employee profile with ID {id} not found"
+        )
+
+    # ADMIN cannot activate/deactivate own account
+    if current_user.get("role") == "ADMIN" and current_user.get("id") == emp.get("id"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="403 Forbidden: ADMIN cannot activate/deactivate own account."
         )
 
     # RBAC: ADMIN cannot disable SUPER_ADMIN

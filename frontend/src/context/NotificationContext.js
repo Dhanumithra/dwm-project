@@ -80,6 +80,42 @@ export function NotificationProvider({ children }) {
     }
   };
 
+  const deleteNotification = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/notifications/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        return true;
+      }
+    } catch (err) {
+      console.warn("Failed to delete notification", err);
+    }
+    return false;
+  };
+
+  const clearAllNotifications = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+    try {
+      const res = await fetch("http://127.0.0.1:8000/notifications", {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setNotifications([]);
+        return true;
+      }
+    } catch (err) {
+      console.warn("Failed to clear notifications", err);
+    }
+    return false;
+  };
+
   const getForUser = () => notifications;
 
   const unreadCount = () => notifications.filter((n) => !n.read).length;
@@ -137,7 +173,7 @@ export function NotificationProvider({ children }) {
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, fetchNotifications, addNotification, markRead, markAllRead, getForUser, unreadCount, approvePasswordReset, addResetRequest, getResetStatus }}
+      value={{ notifications, fetchNotifications, addNotification, markRead, markAllRead, deleteNotification, clearAllNotifications, getForUser, unreadCount, approvePasswordReset, addResetRequest, getResetStatus }}
     >
       {children}
     </NotificationContext.Provider>

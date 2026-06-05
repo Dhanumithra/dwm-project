@@ -294,13 +294,34 @@ export default function EmployeeManagement({ adminUser }) {
                       <td>{e.dept}</td>
 
                       <td>{e.pending?<span style={{ color:"#d97706",fontWeight:700 }}>Pending</span>:e.active?<span style={{ color:"#16a34a",fontWeight:700 }}>Active</span>:<span style={{ color:"#dc2626",fontWeight:700 }}>Inactive</span>}</td>
-                      <td><button className={`btn btn-sm ${e.active?"btn-danger":"btn-success"}`} style={{ fontWeight:600,minWidth:90 }} onClick={async ()=>{
-                        try{
-                          const updated = await employeesApi.toggle(e.id);
-                          setEmployees(p=>p.map(emp=>emp.id===e.id?updated:emp));
-                          msg(updated.active?"success":"warning", `${updated.name} ${updated.active?"activated":"deactivated"}.`);
-                        }catch(err){ msg("warning","Failed to update employee."); }
-                      }}>{e.active?"Deactivate":"Activate"}</button></td>
+                      <td>
+                        {(() => {
+                          const isAdmin = adminUser?.role === "ADMIN";
+                          const isOwnAccount = adminUser?.id === e.id || adminUser?.empNo === e.empNo;
+                          const isSuperAdminTarget = e.role === "SUPER_ADMIN";
+                          const canToggle = !isAdmin || (!isOwnAccount && !isSuperAdminTarget);
+
+                          if (!canToggle) {
+                            return <span style={{ color:"#94a3b8", fontSize:12 }}>-</span>;
+                          }
+
+                          return (
+                            <button
+                              className={`btn btn-sm ${e.active?"btn-danger":"btn-success"}`}
+                              style={{ fontWeight:600,minWidth:90 }}
+                              onClick={async ()=>{
+                                try{
+                                  const updated = await employeesApi.toggle(e.id);
+                                  setEmployees(p=>p.map(emp=>emp.id===e.id?updated:emp));
+                                  msg(updated.active?"success":"warning", `${updated.name} ${updated.active?"activated":"deactivated"}.`);
+                                }catch(err){ msg("warning","Failed to update employee."); }
+                              }}
+                            >
+                              {e.active?"Deactivate":"Activate"}
+                            </button>
+                          );
+                        })()}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

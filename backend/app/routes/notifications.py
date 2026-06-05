@@ -84,3 +84,28 @@ def mark_as_read(id: int, current_user: dict = Depends(get_current_user)):
         
     success = notif_repo.mark_read(id)
     return {"message": "Notification marked as read", "success": success}
+
+@router.delete("/{id}")
+def delete_notification(id: int, current_user: dict = Depends(get_current_user)):
+    """Deletes a specific notification for the authenticated user."""
+    notif = notif_repo.get_by_id(id)
+    if not notif:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Notification with ID {id} not found"
+        )
+
+    if notif["toEmail"] != current_user["email"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden operation"
+        )
+
+    success = notif_repo.delete_by_id(id, current_user["email"])
+    return {"message": "Notification deleted", "success": success}
+
+@router.delete("")
+def delete_all_notifications(current_user: dict = Depends(get_current_user)):
+    """Deletes all notifications for the authenticated user."""
+    deleted_count = notif_repo.delete_all(current_user["email"])
+    return {"message": "All notifications deleted", "deletedCount": deleted_count}

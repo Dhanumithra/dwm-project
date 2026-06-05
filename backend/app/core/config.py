@@ -10,7 +10,7 @@ class Settings(BaseModel):
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "supersecretkeychangeinproduction12345")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24 hours
-    DEFAULT_USER_PASSWORD: str = "dwm@1234"
+    DEFAULT_USER_PASSWORD: str = "dwm@1234"[:72]
 
     # ── Daily work hour limits (configurable) ─────────────────────────────────
     MAX_REGULAR_HOURS_PER_DAY: int = 8
